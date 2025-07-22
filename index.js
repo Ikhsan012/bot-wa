@@ -4,13 +4,14 @@ const {
     useMultiFileAuthState,
     DisconnectReason,
     fetchLatestBaileysVersion,
-    getAudioWaveform
+    getAudioWaveform,
+    processSyncAction
 } = require('@whiskeysockets/baileys');
 
 const pino = require('pino');
 const qrcode = require('qrcode-terminal');
 const axios = require('axios');
-// const { use } = require('react');
+require('dotenv').config() // <--- ini yang benar
 const aiSessions = {};
 // const env = require('env')
 
@@ -56,9 +57,9 @@ async function KonekKeWA() {
 
             if (command === 'ping') {
                 await sock.sendMessage(userJid, { text: 'Pong!' }, { quoted: msg });
-            
+
             } else if (command.startsWith('.ai ')) {
-                const question = text.substring(4); 
+                const question = text.substring(4);
 
                 try {
                     let apiUrl = `https://api.ryzumi.vip/api/ai/chatgpt?text=${encodeURIComponent(question)}`;
@@ -74,11 +75,11 @@ async function KonekKeWA() {
                 } catch (error) {
                     await sock.sendMessage(userJid, { text: 'Maaf, sepertinya AI sedang istirahat.' }, { quoted: msg });
                 }
-            
+
             } else if (command === 'aireset') {
                 delete aiSessions[userJid];
                 await sock.sendMessage(userJid, { text: 'Session Direset' }, { quoted: msg });
-            
+
             } else if (command === 'fufufafa') {
                 try {
                     let fufufafaapi = 'https://fufufafapi.vanirvan.my.id/api/random'
@@ -120,7 +121,7 @@ Ukuran : ${MB.toFixed(2)}MB`
             } else if (command.startsWith('roastinghp')) {
                 const question = text.substring(1)
                 async function callGeminiApi() {
-    const apikey = 'AIzaSyBOKv1XUeNpFhxG6uJqA8eFveIGnO2gQn8';
+    const apikey = process.env.GEMINI_API_KEY;
     const nama_model = "gemini-2.5-pro";
 
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${nama_model}:generateContent?key=${apikey}`;
@@ -145,7 +146,7 @@ Ukuran : ${MB.toFixed(2)}MB`
         });
 
         const geminiResponse = response.data;
-    
+
         if (geminiResponse.candidates && geminiResponse.candidates.length > 0) {
             const hasilai = geminiResponse.candidates[0].content.parts[0].text
             await sock.sendMessage(userJid, { text: hasilai, quoted: msg })
@@ -159,7 +160,7 @@ Ukuran : ${MB.toFixed(2)}MB`
 }
 
 // Panggil fungsinya
-callGeminiApiQ();
+callGeminiApi();
             } else if (command.startsWith('igdl')) {
                 const question = (typeof text === 'string' ? text.substring(4) : '').trim();
                 if (!question) {
@@ -178,7 +179,7 @@ callGeminiApiQ();
                 } catch (error) {
                     console.error(error)
                     await sock.sendMessage(userJid, { text: error, quoted: msg })
-                }   
+                }
             } else if (command.startsWith('teradl')) {
                 await sock.sendMessage(userJid, { text: 'Tunggu.....', caption: msg })
                 const question = text.substring(7)
@@ -201,7 +202,7 @@ callGeminiApiQ();
                 replyMessage += `   Channel: ${video.author.name}\n`;
                 replyMessage += `   Durasi: ${video.duration.timestamp}\n`;
                 replyMessage += `   Link: ${video.url}\n`;
-                replyMessage += `\n`; 
+                replyMessage += `\n`;
                 });
                 await sock.sendMessage(userJid, { text: replyMessage, caption: msg })
             }
