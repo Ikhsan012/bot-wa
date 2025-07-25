@@ -11,7 +11,7 @@ const {
 const pino = require('pino');
 const qrcode = require('qrcode-terminal');
 const axios = require('axios');
-require('dotenv').config() // <--- ini yang benar
+require('dotenv').config()
 const aiSessions = {};
 // const env = require('env')
 
@@ -58,8 +58,15 @@ async function KonekKeWA() {
             if (command === 'ping') {
                 await sock.sendMessage(userJid, { text: 'Pong!' }, { quoted: msg });
 
-            } else if (command.startsWith('.ai ')) {
-                const question = text.substring(4);
+            } else if (command.startsWith('ai')) {
+                const question = (typeof text === 'string' ? text.substring(3) : '').trim();
+                if (!question) {
+                    await sock.sendMessage(userJid, {text: `Format salah, contoh penggunaan
+ai Apa Itu Coding?
+ai Apa Itu Molekul?`, quoted: msg })
+                    return
+                }
+                console.log(question)
 
                 try {
                     let apiUrl = `https://api.ryzumi.vip/api/ai/chatgpt?text=${encodeURIComponent(question)}`;
@@ -119,6 +126,7 @@ Ukuran : ${MB.toFixed(2)}MB`
                 await sock.sendMessage(userJid, { image: { url: tumnail }, caption: message3})
                 await sock.sendMessage(userJid, { audio: { url: audio}, mimetype: 'audio/mp4'})
             } else if (command.startsWith('roastinghp')) {
+                await sock.sendMessage(userJid, { text: 'Sabar.....', caption: msg })
                 const question = text.substring(1)
                 async function callGeminiApi() {
     const apikey = process.env.GEMINI_API_KEY;
@@ -205,6 +213,38 @@ callGeminiApi();
                 replyMessage += `\n`;
                 });
                 await sock.sendMessage(userJid, { text: replyMessage, caption: msg })
+            } else if (command === 'menu') {
+                await sock.sendMessage(userJid, { text: `Halo, Selamat Datang Di Bot Whatsapp Saya
+
+- fufufafa (komentar random fufufafa)
+- ai (tanyakan pertanyaaan)
+- gempa (info gempa terbaru)
+- ytmp3 (download lagu dari yt)
+- ytmp4 (downlaod video dari yt)
+- roastinghp (Roasting Hp Berbasis AI Gemini)
+- igdl (download reel instagram)
+- ytsearch (cari video dari yt)
+
+Bot Ini Di Buat Dengan Full JavaScript Dan API Dari
+- api.ryzumi.vip
+- api.ferdev.my.id
+- Google API Gemini
+`, caption: msg })
+            } else if (command.startsWith('ytmp4')) {
+                const question = (typeof text === 'string' ? text.substring(5) : '').trim();
+                if (!question) {
+                    await sock.sendMessage(userJid, {text: `Format salah, contoh penggunaan
+ytmp4 https://youtu.be/w8pjAV8u2OE?si=XbGKhzeUUSeNp76C`, quoted: msg })
+                    return
+                }
+                let apiytm = `https://api.ryzumi.vip/api/downloader/ytmp4?url=${question}&quality=360`
+                const respon = await axios.get(apiytm)
+                // console.log(respon)
+                const { title: judul, author: pencipta, videoUrl: linkvideo, url: linkdlyt, thumbnail: tumnail, uploadDate: upload } = respon.data
+                let pesan = `Judul : ${judul}|\nChanel : ${pencipta}\nTanggal Upload : ${upload}\nLink YT : ${linkvideo}`
+                await sock.sendMessage(userJid, { image: { url: tumnail }, caption: pesan })
+                await sock.sendMessage(userJid, { text: 'Sabar.... Video Sedang Di Kirim', caption: msg })
+                await sock.sendMessage(userJid, { video: { url: linkdlyt }, caption: 'Ini BOS' })
             }
         }
     })
